@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String       @id @default(cuid())
+  email       String       @unique
+  createdAt   DateTime     @default(now())
+  generations Generation[]
+}
+
+model Generation {
+  id             String           @id @default(cuid())
+  type           GenerationType
+  prompt         String
+  negativePrompt String?
+  provider       Provider
+  model          String?
+  inputAssetUrl  String?          @db.Text
+  outputAssetUrl String?          @db.Text
+  status         GenerationStatus @default(COMPLETED)
+  errorMessage   String?          @db.Text
+  settings       Json?
+  createdAt      DateTime         @default(now())
+  userId         String?
+  user           User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([provider])
+  @@index([type])
+}
+
+enum GenerationType {
+  IMAGE
+  EDIT
+  VIDEO
+}
+
+enum GenerationStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum Provider {
+  OPENAI
+  REPLICATE
+}
